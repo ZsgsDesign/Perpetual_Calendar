@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>万年历</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../css/photon.css">
+    <link rel="stylesheet" href="../css/MDI.css">
+
+    <!-- Javascript -->
+    <style>
+        html,
+        body {
+            font-family: "Microsoft Yahei", "RobotoDraft", "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: transparent;
+        }
+
+        .window {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 30px;
+            margin: 1rem;
+            border: 1px solid #c2c0c2;
+        }
+
+        .cal-header {
+            display: flex;
+            align-items: center;
+        }
+
+        dotgroup {
+            display: flex;
+            flex-grow: 0;
+            flex-shrink: 0;
+            padding-left: 0.75rem;
+            align-items: center;
+        }
+
+        dot {
+            display: inline-block;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 200px;
+            margin-right: 0.25rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, .1);
+            transition: .2s ease-out .0s;
+            -webkit-app-region: no-drag;
+        }
+
+        th,
+        td {
+            padding: 0;
+        }
+
+        dot:hover {
+            filter: brightness(0.75);
+        }
+
+        .cal-header>h1 {
+            flex-grow: 1;
+            flex-shrink: 0;
+        }
+        *{
+            font-family: "华文中宋";
+        }
+        .cal-ordinary{
+            width:100%;
+            padding:1rem;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="window">
+
+        <!-- .toolbar-header sits at the top of your app -->
+        <header class="toolbar toolbar-header cal-header" style="-webkit-app-region: drag">
+            <dotgroup>
+                <dot class="close" style="background:#fc605b;border: 1px solid #f62726;"></dot>
+                <dot class="max" style="background:#fdbc40;border: 1px solid #f1a304;"></dot>
+                <dot class="min" style="background:#34c84a;border: 1px solid #32af24;"></dot>
+            </dotgroup>
+            <h1 class="title">修改日程</h1>
+        </header>
+
+        <!-- Your app's content goes inside .window-content -->
+        <div class="window-content">
+
+                        <div class="cal-ordinary">
+                            <div class="form-group">
+                                <label>时间</label>
+                                <input type="text" id="memo_time_input" class="form-control" placeholder="2018-10-23" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>备忘录标题</label>
+                                <input  id="memo_title_input" type="text" class="form-control" placeholder="标题">
+                                </div>
+                            <div class="form-group">
+                                <label>详细内容</label>
+                                <textarea id="memo_contents_input" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-form btn-default close" >取消</button>
+                                <button type="submit" class="btn btn-form btn-primary" onclick="submitMemo()">修改备忘</button>
+                            </div>
+                        </div>
+
+        </div>
+    </div>
+</body>
+<script>window.$ = window.jQuery = require('./js/jquery-3.2.1.min.js');</script>
+<script type="text/javascript" src="./js/calendar-converter.js"></script>
+<script>
+    var ipcRenderer = require('electron').ipcRenderer;
+    var isBig = true;
+    var CConverter = new CalendarConverter;
+
+    ipcRenderer.on('init', (event, arg) => {
+        $("#memo_time_input").val(localStorage.time);
+        $("#memo_title_input").val(localStorage.title);
+        $("#memo_contents_input").val(localStorage.contents);
+    });
+
+    $(document).on("click", ".close", function () {
+        ipcRenderer.send('memo-window-closed');
+    });
+    $(document).on("click", ".max", function () {
+        if (isBig) {
+            ipcRenderer.send('memo-show-window');
+        } else {
+            ipcRenderer.send('memo-orignal-window');
+        }
+        isBig = !isBig;
+    });
+    $(document).on("click", ".min", function () {
+        ipcRenderer.send('memo-hide-window');
+    });
+
+    function submitMemo(){
+        var time=$("#memo_time_input").val();
+        var title=$("#memo_title_input").val();
+        var contents=$("#memo_contents_input").val();
+        console.log(time);
+        console.log(title);
+        console.log(contents);
+        $.post("https://infini.1cf.co/calendar/ModifyMemo",{
+            cid:localStorage.cid,
+            time:time,
+            title:title,
+            contents:contents,
+            uid:localStorage.uid          
+        },function(result){
+            result=JSON.parse(result);
+            if(result.ret==200){
+                alert("修改成功");
+                ipcRenderer.send('memo-window-closed');
+            }else if(result.ret==1003){
+                alert("请填写全参数");
+            }else{
+                alert("内部服务器错误");
+            }
+        });
+    }
+
+</script>
+
+</html>

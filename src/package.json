@@ -1,0 +1,53 @@
+{
+  "name": "calendar",
+  "productName": "万年历",
+  "version": "1.0.0",
+  "description": "这是一个万年历程序",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "eslint src --color"
+  },
+  "keywords": [],
+  "author": "John",
+  "license": "MIT",
+  "config": {
+    "forge": {
+      "make_targets": {
+        "win32": [
+          "squirrel"
+        ],
+        "darwin": [
+          "zip"
+        ],
+        "linux": [
+          "deb",
+          "rpm"
+        ]
+      },
+      "electronPackagerConfig": {
+        "packageManager": "npm",
+        "icon": "res/icon/icon.ico"
+      },
+      "electronWinstallerConfig": {
+        "name": "万年历"
+      },
+      "electronInstallerDebian": {},
+      "electronInstallerRedhat": {},
+      "github_repository": {
+        "owner": "",
+        "name": ""
+      },
+      "windowsStoreConfig": {
+        "packageName": "",
+        "name": "万年历"
+      }
+    }
+  },
+  "devDependencies": {
+    "electron-rebuild": "^1.8.2"
+  }
+}

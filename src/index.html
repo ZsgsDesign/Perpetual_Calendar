@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>万年历</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../css/photon.css">
+    <link rel="stylesheet" href="../css/MDI.css">
+
+    <!-- Javascript -->
+    <script src="js/menu.js" charset="utf-8"></script>
+    <style>
+        html,
+        body {
+            font-family: "Microsoft Yahei", "RobotoDraft", "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: transparent;
+        }
+
+        .window {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 30px;
+            margin: 1rem;
+            border: 1px solid #c2c0c2;
+        }
+
+        .cal-header {
+            display: flex;
+            align-items: center;
+        }
+
+        dotgroup {
+            display: flex;
+            flex-grow: 0;
+            flex-shrink: 0;
+            padding-left: 0.75rem;
+            align-items: center;
+        }
+
+        dot {
+            display: inline-block;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 200px;
+            margin-right: 0.25rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, .1);
+            transition: .2s ease-out .0s;
+            -webkit-app-region: no-drag;
+        }
+
+        th,
+        td {
+            padding: 0;
+        }
+
+        dot:hover {
+            filter: brightness(0.75);
+        }
+
+        .cal-header>h1 {
+            flex-grow: 1;
+            flex-shrink: 0;
+        }
+
+        *,
+        *:before,
+        *:after {
+            box-sizing: border-box;
+        }
+
+        .datepicker {
+            transition: .2s ease-out .0s;
+            width: 20rem;
+            background: #fff;
+            border-radius: 0px;
+            box-shadow: 0 0 50px 0 rgba(0, 0, 0, 0.4);
+            margin: 0;
+            overflow: hidden;
+            height: 100%;
+            z-index: 9;
+            flex-shrink: 0;
+        }
+
+        .calendar-detail {
+            flex-grow: 1;
+        }
+
+        .datepicker .datepicker-header {
+            height: 18rem;
+            position: relative;
+        }
+
+        .datepicker .datepicker-header>img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            transition: 1s ease-out .0s;
+            opacity: 1;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        .datepicker .ui-datepicker-inline {
+            padding: 2rem;
+        }
+
+        .datepicker .ui-datepicker-header {
+            text-align: center;
+            padding-bottom: 1em;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+        }
+
+        .datepicker .ui-datepicker-header .ui-datepicker-prev,
+        .datepicker .ui-datepicker-header .ui-datepicker-next {
+            display: inline;
+            /* float: left; */
+            font-size: 1.4em;
+            padding: 0 10px;
+            /* margin-top: -10px; */
+        }
+
+        .datepicker .ui-datepicker-header .ui-datepicker-prev icon,
+        .datepicker .ui-datepicker-header .ui-datepicker-next icon {
+            color: #CCC;
+        }
+
+        .datepicker .ui-datepicker-header .ui-datepicker-next {
+            /* float: right; */
+        }
+
+        .datepicker .ui-datepicker-calendar {
+            width: 100%;
+            text-align: center;
+        }
+
+        .datepicker .ui-datepicker-calendar thead {
+            color: #CCC;
+        }
+
+        .datepicker .ui-datepicker-calendar tr th,
+        .datepicker .ui-datepicker-calendar tr td {
+            padding-bottom: .5em;
+        }
+
+        .datepicker .ui-datepicker-calendar a {
+            color: #444;
+            text-decoration: none;
+            display: block;
+            margin: 0 auto;
+            width: 35px;
+            height: 35px;
+            line-height: 35px;
+            border-radius: 50%;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .ui-state-default {
+            transition: .2s ease-out .0s;
+        }
+
+        .datepicker .ui-datepicker-calendar .ui-state-default:hover {
+            border-color: rgba(0, 0, 0, .42);
+        }
+
+        .datepicker .ui-datepicker-calendar .ui-state-default.ui-state-highlight {
+            border-color: #D24D57;
+            color: #D24D57;
+        }
+
+        .datepicker .ui-datepicker-calendar .ui-state-highlight:hover {
+            border-color: #D24D57;
+            color: #D24D57;
+        }
+
+        .datepicker .ui-datepicker-calendar .cal-current {
+            border-color: rgba(0, 0, 0, .21);
+        }
+
+        .datepicker th {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
+
+        .datepicker thead {
+            background-color: transparent;
+        }
+
+        .datepicker tr:active,
+        .datepicker .table-striped tr:active:nth-child(even) {
+            background-color: transparent;
+        }
+
+        section {
+            padding: 1rem;
+            height: 100%;
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            transition: .2s ease-out .0s;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+
+        section.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .cal-central {
+            padding: 0;
+            display: flex;
+            /* align-items: center;
+            justify-content: center; */
+            /* height: 100%; */
+        }
+
+        .cal-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 2rem !important;
+        }
+
+        a.ui-datepicker-prev.ui-corner-all *,
+        a.ui-datepicker-next.ui-corner-all * {
+            cursor: pointer !important;
+        }
+
+        .focus-none {
+            opacity: 0 !important;
+        }
+
+        .calendar-header-section {
+            width: 100%;
+            height: 8rem;
+            background: #fff !important;
+            border-bottom: 1px solid #c2c0c2;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .calendar-detail {
+            background: rgba(250, 250, 250);
+        }
+
+        .calendar-header-left {
+            display: flex;
+            align-items: center;
+            flex-shrink: 1;
+            flex-grow: 1;
+        }
+
+        .calendar-header-right {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+            flex-grow: 0;
+        }
+
+        .calendar-header-left h2 {
+            font-weight: 100;
+            color: #7a8e97;
+            font-family: "华文中宋";
+            letter-spacing: 0.1rem;
+            margin: 0;
+            font-size: 1.5rem;
+        }
+
+        .calendar-header-left p,
+        .calendar-header-right p {
+            color: #bcc4c8;
+            margin: 0;
+            font-weight: 900;
+        }
+
+        .calendar-header-right p {
+            text-align: right;
+        }
+
+        .cal-weather-info {
+            display: flex;
+            justify-content: flex-end;
+            line-height: 3rem;
+            font-size: 1.6rem;
+            color: #555;
+            font-weight: 100;
+        }
+
+        #weather_icon {
+            width: 3rem;
+            height: 3rem;
+            margin-left: 1rem;
+        }
+
+        .calendar-detail-section {
+            height: calc(100% - 8rem);
+            padding: 1rem 2rem;
+            position: relative;
+            overflow-y:scroll;
+        }
+
+        .cal-require-login {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            z-index: 8;
+        }
+
+        .cal-require-login>div {
+            text-align: center;
+        }
+
+        .cal-require-login h4 {
+            font-weight: 100;
+            color: #7a8e97;
+            font-family: "华文中宋";
+            letter-spacing: 0.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .cal-require-login img {
+            width: 10rem;
+            height: 10rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-actions {
+            margin-top: 1rem;
+        }
+
+        img {
+            -webkit-user-drag: none;
+        }
+
+        .cal-about,
+        .cal-account-info {
+            display: flex;
+            height: 100%;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cal-ordinary {
+            width: 100%;
+        }
+
+        .cal-about>div,
+        .cal-account-info>div {
+            text-align: center;
+            flex-grow: 0;
+            flex-shrink: 0;
+            width: 80%;
+        }
+
+        .cal-account-info img {
+            border-radius: 2000px;
+            border: 1px solid #c2c0c2;
+            width: 10rem;
+            height: 10rem;
+        }
+
+        .cal-about img {
+            border-radius: 10px;
+            border: 2px solid #57acf5;
+            width: 10rem;
+            height: 10rem;
+            padding: 1rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, .1);
+        }
+
+        .cal-about *,
+        .cal-account-info * {
+            font-weight: 100;
+            color: #7a8e97;
+            font-family: "华文中宋";
+            letter-spacing: 0.1rem;
+            margin: 0;
+            /* font-size: 1.5rem; */
+        }
+
+        .cal-account-info h4 {
+            margin: 1rem 0;
+        }
+
+        .cal-about p,
+        .cal-account-info p {
+            margin-top: 0.5rem;
+        }
+
+        * {
+            font-family: "华文中宋";
+        }
+
+        /* Card Component */
+
+        card{
+            display: block;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 30px;
+            border-radius: 4px;
+            transition: .2s ease-out .0s;
+            color:#7a8e97;
+            background: #fff;
+            padding-top:3rem;
+            padding-bottom:2rem;
+            padding-right:2rem;
+            padding-left:2rem;
+            position: relative;
+            border:1px solid rgba(0, 0, 0, 0.15);
+            margin-bottom: 2rem;
+        }
+
+        card > tag{
+            position: absolute;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 30px;
+            /* box-shadow: 0 10px 6px -6px #777; */
+            color:#fff;
+            display: block;
+            font-size: 1rem;
+            line-height: 2rem;
+            height:2rem;
+            top:-1rem;
+            left:2rem;
+            padding:0 1rem;
+            border-radius: 2px;
+        }
+        .cal-festival{
+            background: #32af24;
+        }
+        .cal-memo{
+            background: #fdbc40;
+        }
+        .cal-events{
+            background: #57acf5;
+        }
+
+        card > theme{
+            display: block;
+            font-size: 2rem;
+            color:#7a8e97;
+            font-weight: 900;
+            margin:0;
+        }
+
+        card > sub-theme{
+            display: block;
+            font-size: 1rem;
+            color:#c2c0c2;
+            font-weight: normal;
+            margin:0;
+        }
+        .cal-card-festival img-container{
+            display: block;
+            position: absolute;
+            right:0;
+            left:0;
+            bottom:0;
+            top:0;
+            overflow: hidden;
+        }
+        .cal-card-festival img{
+            position: absolute;
+            right:-2rem;
+            bottom:-2rem;
+            width:15rem;
+            height:15rem;
+        }
+        card info{
+            margin-top:1rem;
+            font-size: 1rem;
+            display: inline-block;
+            padding-right:1.5rem;
+        }
+
+        card info i{
+            display: inline-block;
+            transform: scale(1.2);
+            padding-right:0.5rem;
+        }
+
+        card:hover{
+            box-shadow: rgba(0, 0, 0, 0.15) 0px 0px 40px;
+        }
+
+        fab:hover{
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 0px 40px;
+        }
+
+        fab{
+            display:block;
+            width:2.5rem;
+            height:2.5rem;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 20px;
+            background: #c0c7ca;
+            color:#fff;
+            line-height: 2.5rem;
+            font-size: 1rem;
+            font-weight: 100;
+            text-align: center;
+            margin-left:2rem;
+            border-radius: 200px;
+            transition: .2s ease-out .0s;
+            cursor: pointer;
+        }
+
+        .cal-ord-action-section{
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            color:#929697;
+            margin-bottom:2rem;
+            margin-top:1rem;
+        }
+
+        .cal-text-truncate-1{
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-all;
+            white-space: normal !important;
+            -webkit-line-clamp: 1;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+
+        .cal-text-truncate-2{
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+            word-break: break-all;
+            white-space: normal !important;
+            -webkit-line-clamp: 2;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+        }
+
+        card > i:first-of-type{
+            position: absolute;
+            top:1rem;
+            right:1rem;
+            z-index:1;
+            font-size: 1rem;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        card > i:last-of-type{
+            position: absolute;
+            top:1rem;
+            right:3rem;
+            z-index:1;
+            font-size: 1rem;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="window">
+
+        <!-- .toolbar-header sits at the top of your app -->
+        <header class="toolbar toolbar-header cal-header" style="-webkit-app-region: drag">
+            <dotgroup>
+                <dot class="close" style="background:#fc605b;border: 1px solid #f62726;"></dot>
+                <dot class="max" style="background:#fdbc40;border: 1px solid #f1a304;"></dot>
+                <dot class="min" style="background:#34c84a;border: 1px solid #32af24;"></dot>
+            </dotgroup>
+            <h1 class="title">万年历</h1>
+        </header>
+
+        <!-- Your app's content goes inside .window-content -->
+        <div class="window-content">
+            <div class="pane-group">
+                <div class="pane pane-sm sidebar">
+                    <nav class="nav-group">
+                        <h5 class="nav-group-title">操作</h5>
+                        <span class="nav-group-item active" id="nav_calendar" onclick="shiftTabs(0)">
+                            <span class="icon MDI calendar"></span>
+                            万年历
+                        </span>
+                        <span class="nav-group-item" id="nav_events" onclick="shiftTabs(1)">
+                            <span class="icon MDI calendar-clock"></span>
+                            新建日程
+                        </span>
+                        <span class="nav-group-item" id="nav_memo" onclick="shiftTabs(2)">
+                            <span class="icon MDI note-text"></span>
+                            新建备忘录
+                        </span>
+                    </nav>
+                    <nav class="nav-group">
+                        <h5 class="nav-group-title">账户</h5>
+                        <span class="nav-group-item" id="nav_account" onclick="shiftTabs(3)">
+                            <span class="icon MDI account-circle"></span>
+                            我的
+                        </span>
+                        <span class="nav-group-item" id="nav_about" onclick="shiftTabs(4)">
+                            <span class="icon MDI information"></span>
+                            关于
+                        </span>
+                    </nav>
+                </div>
+
+                <div class="pane">
+
+
+
+
+
+
+                    <section class="cal-central active" id="section_calendar">
+                        <div class="datepicker hasDatepicker">
+                            <div class="datepicker-header">
+                                <!-- 单独加载会造成卡顿，因此这样缓存 -->
+                                <img id="focus1" class="focus-none" src="../res/focus/1.jpg">
+                                <img id="focus2" class="focus-none" src="../res/focus/2.jpg">
+                                <img id="focus3" class="focus-none" src="../res/focus/3.jpg">
+                                <img id="focus4" class="focus-none" src="../res/focus/4.jpg">
+                                <img id="focus5" class="focus-none" src="../res/focus/5.jpg">
+                                <img id="focus6" class="focus-none" src="../res/focus/6.jpg">
+                                <img id="focus7" class="focus-none" src="../res/focus/7.jpg">
+                                <img id="focus8" class="focus-none" src="../res/focus/8.jpg">
+                                <img id="focus9" class="focus-none" src="../res/focus/9.jpg">
+                                <img id="focus10" class="focus-none" src="../res/focus/10.jpg">
+                                <img id="focus11" class="focus-none" src="../res/focus/11.jpg">
+                                <img id="focus12" class="focus-none" src="../res/focus/12.jpg">
+                            </div>
+                            <div class="ui-datepicker-inline ui-datepicker ui-widget ui-widget-content ui-helper-clearfix ui-corner-all" style="display: block;">
+                                <div class="ui-datepicker-header ui-widget-header ui-helper-clearfix ui-corner-all cal-title">
+                                    <a class="ui-datepicker-prev ui-corner-all" data-handler="prev" data-event="click" onclick="prevMonth()">
+                                        <span class="ui-icon ui-icon-circle-triangle-w">
+                                            <i class="icon MDI chevron-left"></i>
+                                        </span>
+                                    </a>
+                                    <div class="ui-datepicker-title">
+                                        <span class="ui-datepicker-year" id="year">2018年</span>&nbsp;
+                                        <span class="ui-datepicker-month" id="month">十月</span>
+                                    </div>
+                                    <a class="ui-datepicker-next ui-corner-all" data-handler="next" data-event="click" onclick="nextMonth()">
+                                        <span class="ui-icon ui-icon-circle-triangle-e">
+                                            <i class="icon MDI chevron-right"></i>
+                                        </span>
+                                    </a>
+                                </div>
+                                <table class="ui-datepicker-calendar">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col" class="ui-datepicker-week-end">
+                                                <span title="Sunday">日</span>
+                                            </th>
+                                            <th scope="col">
+                                                <span title="Monday">一</span>
+                                            </th>
+                                            <th scope="col">
+                                                <span title="Tuesday">二</span>
+                                            </th>
+                                            <th scope="col">
+                                                <span title="Wednesday">三</span>
+                                            </th>
+                                            <th scope="col">
+                                                <span title="Thursday">四</span>
+                                            </th>
+                                            <th scope="col">
+                                                <span title="Friday">五</span>
+                                            </th>
+                                            <th scope="col" class="ui-datepicker-week-end">
+                                                <span title="Saturday">六</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="calendar_field">
+                                        <td class="ui-datepicker-days-cell-over  ui-datepicker-current-day ui-datepicker-today">
+                                            <a class="ui-state-default ui-state-highlight ui-state-active ui-state-hover">22</a>
+                                        </td>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="calendar-detail" id="calendar_detail">
+                            <div class="calendar-header-section">
+                                <div class="calendar-header-left">
+                                    <div>
+                                        <h2>
+                                            <span id="left_cur_day"></span>日 星期<span id="left_cur_week_day"></span>
+                                        </h2>
+                                        <p>
+                                            <span id="left_cur_year"></span> 年
+                                            <span id="left_cur_month"></span> 月
+                                            <span id="lunar_info"></span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="calendar-header-right">
+                                    <div>
+                                        <div class="cal-weather-info">
+                                            <span id="weather_temperature"></span>
+                                            <img id="weather_icon" src="../res/weather/0.svg">
+                                        </div>
+                                        <p>
+                                            <span id="weather_name"></span> · 江苏省南京市</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="calendar-detail-section">
+                                <div class="cal-require-login" style="background: rgba(250,250,250);">
+                                    <div>
+                                        <img src="../res/etc/account.svg">
+                                        <h4>登录开启更多功能</h4>
+                                        <button class="btn btn-large btn-primary" onclick="shiftTabs(3)">登录</button>
+                                        <button class="btn btn-large btn-default" onclick="shiftTabs(3)">注册</button>
+                                    </div>
+                                </div>
+                                <div class="cal-ordinary">
+                                    <div class="cal-ord-action-section">
+                                        <span>新增一个备忘录或者日程</span>
+                                        <fab onclick="shiftTabs(1)"><i class="MDI plus"></i></fab>
+                                    </div>
+                                    <card class="cal-card-festival" id="cur_festival_container" style="display: none;">
+                                        <tag class="cal-festival">节日提醒</tag>
+                                        <theme id="cur_festival">今日国庆节</theme>
+                                        <sub-theme id="cur_festival_date">2018年10月1日</sub-theme>
+                                        <img-container>
+                                            <img src="../res/etc/festival.png">
+                                        </img-container>
+                                    </card>
+                                    <div id="schedule_container">
+
+                                    </div>
+                                    <!-- <card class="cal-card-memo">
+                                            <tag class="cal-memo">备忘录</tag>
+                                            <sub-theme>最后编辑于 2018-10-1 12:34:56</sub-theme>
+                                            <theme class="cal-text-truncate-1">晚上要开导论课</theme>
+                                            <p>今天晚上要开导论课，这个不能忘了。</p>
+                                    </card>
+                                    <card class="cal-card-events">
+                                        <tag class="cal-events">日程</tag>
+                                        <sub-theme>最后编辑于 2018-10-1 12:34:56</sub-theme>
+                                        <theme class="cal-text-truncate-1">计算机分类导论课</theme>
+                                        <info><i class="MDI clock"></i> 20：00</info>
+                                        <info><i class="MDI near-me"></i> 教3-303</info>
+                                    </card> -->
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+
+
+
+
+
+                    <section id="section_events">
+                        <div class="cal-require-login">
+                            <div>
+                                <img src="../res/etc/account.svg">
+                                <h4>登录开启更多功能</h4>
+                                <button class="btn btn-large btn-primary" onclick="shiftTabs(3)">登录</button>
+                                <button class="btn btn-large btn-default" onclick="shiftTabs(3)">注册</button>
+                            </div>
+                        </div>
+                        <div class="cal-ordinary">
+                            <div class="form-group">
+                                <label>时间</label>
+                                <input type="text" id="events_time_input" class="form-control" placeholder="2018-10-23" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>日程标题</label>
+                                <input  id="events_title_input" type="text" class="form-control" placeholder="标题">
+                                </div>
+                            <div class="form-group">
+                                <label>日程地点</label>
+                                <input id="events_arrange_loc_input" type="text" class="form-control" placeholder="地点">
+                            </div>
+                            <div class="form-group">
+                                <label>提醒时间</label>
+                                <select id="events_arrange_time_input" class="form-control">
+                                    <option>0</option>
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                    <option>5</option>
+                                    <option>6</option>
+                                    <option>7</option>
+                                    <option>8</option>
+                                    <option>9</option>
+                                    <option>10</option>
+                                    <option>11</option>
+                                    <option>12</option>
+                                    <option>13</option>
+                                    <option>14</option>
+                                    <option>15</option>
+                                    <option>16</option>
+                                    <option>17</option>
+                                    <option>18</option>
+                                    <option>19</option>
+                                    <option>20</option>
+                                    <option>21</option>
+                                    <option>22</option>
+                                    <option>23</option>
+                                    <option>24</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-form btn-default" onclick="shiftTabs(2)">新建备忘</button>
+                                <button type="submit" class="btn btn-form btn-primary" onclick="submitEvents()">新建日程</button>
+                            </div>
+                        </div>
+                    </section>
+
+
+
+
+
+
+                    <section id="section_memo">
+                        <div class="cal-require-login">
+                            <div>
+                                <img src="../res/etc/account.svg">
+                                <h4>登录开启更多功能</h4>
+                                <button class="btn btn-large btn-primary" onclick="shiftTabs(3)">登录</button>
+                                <button class="btn btn-large btn-default" onclick="shiftTabs(3)">注册</button>
+                            </div>
+                        </div>
+                        <div class="cal-ordinary">
+                                <div class="form-group">
+                                    <label>时间</label>
+                                    <input id="memo_time_input" type="text" id="events_time_input" class="form-control" placeholder="2018-10-23" disabled>
+                                </div>
+                                <div class="form-group">
+                                    <label>备忘录标题</label>
+                                    <input id="memo_title_input" type="text" class="form-control" placeholder="标题">
+                                    </div>
+                                <div class="form-group">
+                                    <label>详细内容</label>
+                                    <textarea id="memo_contents_input" class="form-control" rows="3"></textarea>
+                                    </div>
+                                <div class="form-actions">
+                                    <button type="submit" class="btn btn-form btn-default" onclick="shiftTabs(1)">新建日程</button>
+                                    <button type="submit" class="btn btn-form btn-primary" onclick="submitMemo()">新建备忘</button>
+                                </div>
+                            </div>
+                    </section>
+
+
+
+
+
+
+                    <section id="section_account">
+                        <div class="cal-require-login">
+                            <div>
+                                <img src="../res/etc/account.svg">
+                                <h4>使用您的相关信息进行操作</h4>
+                                <div class="form-group">
+                                    <!-- <h4>电子邮箱</h4> -->
+                                    <input id="email_input" type="email" class="form-control" placeholder="电子邮箱">
+                                </div>
+                                <div class="form-group">
+                                    <!-- <h4>密码</h4> -->
+                                    <input id="password_input" type="password" class="form-control" placeholder="密码">
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-form btn-default" onclick="register()">注册</button>
+                                    <button class="btn btn-form btn-primary" onclick="login()">登录</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cal-account-info">
+                            <div>
+                                <img src="../res/etc/default.png">
+                                <h4 id="account_email"></h4>
+                                <button class="btn btn-large btn-negative" onclick="logout()" style="color:#fff;">退出</button>
+                            </div>
+                        </div>
+                    </section>
+
+
+
+
+
+
+                    <section id="section_about">
+                        <div class="cal-about">
+                            <div>
+                                <img src="../res/icon/icon.svg">
+                                <h1>万年历</h1>
+                                <h4>Yet Another Perpetual Calendar</h4>
+                                <p>本应用遵循MIT开源协议</p>
+                                <p>
+                                    <br>
+                                </p>
+                                <p>版本 1.0.0</p>
+                                <p>作者：张佑杰</p>
+                                <p>个人主页：https://www.johnzhang.xyz</p>
+                                <p>
+                                    <br>
+                                </p>
+                                <p>本应用的诞生离不开开源社区优秀项目Election、Election Forge、Material Design Icons、Node.js、PhotonKit等的支持。</p>
+                            </div>
+                        </div>
+                    </section>
+
+
+
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+<script>window.$ = window.jQuery = require('./js/jquery-3.2.1.min.js');</script>
+<script type="text/javascript" src="./js/calendar-converter.js"></script>
+<script>
+    var ipcRenderer = require('electron').ipcRenderer;
+    // ipcRenderer.send('events-window-open');
+    var isBig = true;
+    var CConverter = new CalendarConverter;
+    localStorage.editing=0;
+
+    ipcRenderer.on('editing', (event, arg) => {
+        localStorage.editing=0;
+        clickDate(cur_year, cur_month, cur_day);
+    });
+
+    if (!parseInt(localStorage.uid)) {
+        localStorage.uid = 0;
+    } else {
+        $("#account_email").html(localStorage.email);
+        $(".cal-require-login").css("display", "none");
+    }
+
+    $(document).on("click", ".close", function () {
+        ipcRenderer.send('window-all-closed');
+    });
+    $(document).on("click", ".max", function () {
+        if (isBig) {
+            ipcRenderer.send('show-window');
+        } else {
+            ipcRenderer.send('orignal-window');
+        }
+        isBig = !isBig;
+    });
+    $(document).on("click", ".min", function () {
+        ipcRenderer.send('hide-window');
+    });
+
+    var cur_date = new Date();
+    var cur_day = cur_date.getDate();
+    var cur_month = cur_date.getMonth() + 1;
+    var cur_year = cur_date.getFullYear();
+    var cur_festival = null;
+    var cur_festival_date = null;
+
+    var real_cur_day = cur_date.getDate();
+    var real_cur_month = cur_date.getMonth() + 1;
+    var real_cur_year = cur_date.getFullYear();
+
+    changeMonth(cur_year, cur_month, 1);
+
+    function prevMonth() {
+        cur_month--;
+        if (cur_month == 0) {
+            cur_month = 12;
+            cur_year--;
+        }
+        changeMonth(cur_year, cur_month);
+    }
+
+    function nextMonth() {
+        cur_month++;
+        if (cur_month == 13) {
+            cur_month = 1;
+            cur_year++;
+        }
+        changeMonth(cur_year, cur_month);
+    }
+
+    function changeMonth(year, month, init = 0) {
+        var firstDay = getWeekByDay(year + "-" + month + "-" + 1);
+        var totDay = getCountDays(year + "-" + month + "-" + 1);
+        var pre_proc_date_cur = 7 - firstDay;
+        var normal_proc_date = pre_proc_date_cur + 1;
+        var normal_proc_date_loops = parseInt((totDay - pre_proc_date_cur) / 7);
+        var after_proc_date = (totDay - pre_proc_date_cur) % 7;
+        var after_proc_date_cur = normal_proc_date + normal_proc_date_loops * 7;
+        $("#calendar_field").html("");
+        $("#year").html(year + "年");
+        var month_char = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"];
+        $("#month").html(month_char[month] + "月");
+        for (var i = 1; i <= 12; i++) document.getElementById("focus" + i).className = "focus-none";
+        document.getElementById("focus" + month).className = "";
+
+        if (!init) {
+            cur_day = 1;
+            cur_month = month;
+            cur_year = year;
+        }
+
+        var pre_content = "";
+        var i = 1;
+        pre_content += "<tr>";
+        for (var k = 0; k < firstDay; k++) {
+            pre_content += "<td class=\" ui-datepicker-week-end ui-datepicker-other-month ui-datepicker-unselectable ui-state-disabled\">&nbsp;</td>";
+        }
+        for (var k = firstDay; k <= 6; k++) {
+            pre_content += '<td class=" " data-handler="selectDay" data-event="click" data-month="' + month + '" data-year="' + year + '">';
+            pre_content += '<a class="' + real_date(year, month, i) + ' ui-state-default" id="date' + i + '" onclick="clickDate(cur_year,cur_month,' + i + ')" href="#">' + i + '</a>';
+            pre_content += '</td>';
+            i++;
+        }
+
+        var i = normal_proc_date;
+
+        pre_content += "</tr>";
+        for (var j = 1; j <= normal_proc_date_loops; j++) {
+            pre_content += "<tr>";
+            for (var k = 0; k <= 6; k++) {
+                pre_content += '<td class=" " data-handler="selectDay" data-event="click" data-month="' + month + '" data-year="' + year + '">';
+                pre_content += '<a class="' + real_date(year, month, i) + ' ui-state-default" id="date' + i + '" onclick="clickDate(cur_year,cur_month,' + i + ')" href="#">' + i + '</a>';
+                pre_content += '</td>';
+                i++;
+            }
+            pre_content += "</tr>";
+        }
+
+        pre_content += "<tr>";
+        for (var k = 0; k < after_proc_date; k++) {
+            pre_content += '<td class=" " data-handler="selectDay" data-event="click" data-month="' + month + '" data-year="' + year + '">';
+            pre_content += '<a class="' + real_date(year, month, i) + ' ui-state-default" id="date' + i + '" onclick="clickDate(cur_year,cur_month,' + i + ')" href="#">' + i + '</a>';
+            pre_content += '</td>';
+            i++;
+        }
+        for (var k = after_proc_date; k <= 6; k++) {
+            pre_content += "<td class=\" ui-datepicker-other-month ui-datepicker-unselectable ui-state-disabled\">&nbsp;</td>";
+            i++;
+        }
+        pre_content += "</tr>";
+        $("#calendar_field").html(pre_content);
+
+        clickDate(cur_year, cur_month, cur_day);
+    }
+
+    function clickDate(year, month, day) {
+        $("#date" + cur_day).removeClass("ui-state-highlight ui-state-active ui-state-hover");
+        cur_day = day;
+        $("#date" + day).addClass("ui-state-highlight ui-state-active ui-state-hover");
+
+        var month_char = ["零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十", "十一", "十二"];
+        var week_char = ["日", "一", "二", "三", "四", "五", "六"];
+        $("#left_cur_day").html(cur_day);
+        $("#left_cur_month").html(month_char[cur_month]);
+        $("#left_cur_year").html(cur_year);
+        $("#left_cur_week_day").html(week_char[getWeekByDay(cur_year + "-" + cur_month + "-" + cur_day)]);
+
+        $("#events_time_input").val(year+"-"+month+"-"+day);
+        $("#memo_time_input").val(year+"-"+month+"-"+day);
+
+        $("#lunar_info").html();
+        var lunar_info = CConverter.solar2lunar(new Date(cur_year, cur_month - 1, cur_day));
+        if (lunar_info['lunarFestival']) {
+            cur_festival = lunar_info['lunarFestival'];
+            cur_festival_date = lunar_info['lunarMonth'] + "月" + lunar_info['lunarDay'];
+        } else if (lunar_info['solarTerms']) {
+            cur_festival = lunar_info['solarTerms'];
+            cur_festival_date = lunar_info['lunarMonth'] + "月" + lunar_info['lunarDay'];
+        } else if (lunar_info['solarFestival']) {
+            cur_festival = lunar_info['solarFestival'];
+            cur_festival_date = lunar_info['sMonth'] + "月" + lunar_info['sDay']+"日";
+        } else {
+            cur_festival = "";
+            cur_festival_date = "";
+        }
+        var lunar_info_string = "· " + lunar_info['lunarMonth'] + "月" + lunar_info['lunarDay'] + " " + cur_festival;
+        $("#lunar_info").html(lunar_info_string);
+
+        $("#weather_name").html("天气数据拉取中");
+        document.getElementById("weather_icon").src = "../res/weather/0.svg";
+        $("#weather_temperature").html("获取中");
+        
+        $.get("https://sapi.k780.com/?app=weather.history&weaid=399&&appkey=37523&sign=cbd880701c4bd44cfa79faecac5abeb6&format=json",{
+            date:year+"-"+month+"-"+day
+        },function(result){
+            console.log(result);
+            // console.log(JSON.stringify(result));
+            if(result.success!="0"){
+                if(!result.result[7]){
+                    $("#weather_name").html("暂无天气数据");
+                    document.getElementById("weather_icon").src="../res/weather/0.svg";
+                    $("#weather_temperature").html("未知");
+                }else{
+                    var weather_temperature=result.result[7].temperature;
+                    var weather_name=result.result[7].weather;
+                    var weather_icon=result.result[7].weather_iconid;
+                    $("#weather_temperature").html(weather_temperature);
+                    $("#weather_name").html(weather_name);
+                    document.getElementById("weather_icon").src="../res/weather/"+weather_icon+".svg";
+                }
+            }else{
+                $("#weather_name").html("暂无天气数据");
+                document.getElementById("weather_icon").src="../res/weather/0.svg";
+                $("#weather_temperature").html("未知");
+            }
+        });
+
+        if(cur_festival){
+            $("#cur_festival_container").css("display","block");
+            $("#cur_festival").html("今日"+cur_festival);
+            $("#cur_festival_date").html(cur_festival_date);
+        }else{
+            $("#cur_festival_container").css("display","none");
+        }
+
+        $("#schedule_container").html("");
+        $.post("https://infini.1cf.co/calendar/GetSchedules",{
+            uid:localStorage.uid,
+            date:year+"-"+month+"-"+day
+        },function(result){
+            result=JSON.parse(result);
+            console.log(result);
+            if(result.ret==200){
+                var pre_content="";
+                result.data.forEach(element => {
+                    if(element.type==0) pre_content+=generateMemo(element.title,element.contents,element.edit_time,element.cid);
+                    else pre_content+=generateEvents(element.title,element.arrange_time,element.arrange_loc,element.edit_time,element.cid);
+                });
+                $("#schedule_container").html(pre_content);
+            }
+        });
+    }
+
+    function shiftTabs(index) {
+        var tabs = ["calendar", "events", "memo", "account", "about"];
+        $("#section_calendar").removeClass("active");
+        $("#section_events").removeClass("active");
+        $("#section_memo").removeClass("active");
+        $("#section_account").removeClass("active");
+        $("#section_about").removeClass("active");
+        $("#section_" + tabs[index]).addClass("active");
+
+        $("#nav_calendar").removeClass("active");
+        $("#nav_events").removeClass("active");
+        $("#nav_memo").removeClass("active");
+        $("#nav_account").removeClass("active");
+        $("#nav_about").removeClass("active");
+        $("#nav_" + tabs[index]).addClass("active");
+    }
+
+    function login() {
+        var email = $("#email_input").val();
+        var password = $("#password_input").val();
+        $.post("https://infini.1cf.co/calendar/login", {
+            email: email,
+            password: password
+        }, function (ret) {
+            console.log(ret);
+            ret = JSON.parse(ret);
+            if (ret.ret == 200) {
+                localStorage.uid = ret.data.uid;
+                localStorage.email = ret.data.email;
+                $(".cal-require-login").css("display", "none");
+                $("#account_email").html(localStorage.email);
+            } else if (ret.ret == 2002) {
+                console.log(1);
+                alert("邮箱未注册或密码错误");
+            }
+        });
+    }
+
+    function register() {
+        var email = $("#email_input").val();
+        var password = $("#password_input").val();
+        $.post("https://infini.1cf.co/calendar/register", {
+            email: email,
+            password: password
+        }, function (ret) {
+            console.log(ret);
+            ret = JSON.parse(ret);
+            if (ret.ret == 200) {
+                localStorage.uid = ret.data.uid;
+                localStorage.email = ret.data.email;
+                $(".cal-require-login").css("display", "none");
+                $("#account_email").html(localStorage.email);
+            } else if (ret.ret == 2003) {
+                alert("邮箱已经注册");
+            } else if (ret.ret == 2004) {
+                alert("请设置6位以上密码，不要过长");
+            } else if (ret.ret == 2005) {
+                alert("请输入合法的邮箱");
+            }
+        });
+    }
+
+    function generateMemo(title,contents,edit_time,cid){
+        var temp="";
+        temp+='<card class="cal-card-memo">';
+        temp+='                                    <tag class="cal-memo">备忘录</tag>';
+        temp+='                                    <sub-theme>最后编辑于 '+edit_time+'</sub-theme>';
+        temp+='                                    <theme class="cal-text-truncate-1" id="memo_title_'+cid+'">'+title+'</theme>';
+        temp+='                                    <p id="memo_contents_'+cid+'">'+contents+'</p>';
+        temp+='                                    <i class="MDI window-close" onclick="deleteSchedule('+cid+');"></i>';
+        temp+='                                    <i class="MDI pencil" onclick="editMemo('+cid+');"></i>';
+        temp+='                            </card>';
+        return temp;
+    }
+
+    function generateEvents(title,arrange_time,arrange_loc,edit_time,cid){
+        var temp="";
+        temp+='                                    <card class="cal-card-events">';
+        temp+='                                <tag class="cal-events">日程</tag>';
+        temp+='                                <sub-theme>最后编辑于 '+edit_time+'</sub-theme>';
+        temp+='                                <theme class="cal-text-truncate-1" id="events_title_'+cid+'">'+title+'</theme>';
+        temp+='                                <info><i class="MDI clock"></i> <span id="events_arrange_time_'+cid+'">'+arrange_time+'</span>：00</info>';
+        temp+='                                <info><i class="MDI near-me"></i> <span id="events_arrange_loc_'+cid+'">'+arrange_loc+'</span></info>';
+        temp+='                                    <i class="MDI window-close" onclick="deleteSchedule('+cid+');"></i>';
+        temp+='                                    <i class="MDI pencil" onclick="editEvents('+cid+');"></i>';
+        temp+='                            </card>';
+        return temp;
+    }
+
+    function submitEvents(){
+        var time=$("#events_time_input").val();
+        var title=$("#events_title_input").val();
+        var arrange_time=$("#events_arrange_time_input").val();
+        var arrange_loc=$("#events_arrange_loc_input").val();
+        console.log(time);
+        console.log(title);
+        console.log(arrange_time);
+        console.log(arrange_loc);
+        $.post("https://infini.1cf.co/calendar/NewEvents",{
+            time:time,
+            title:title,
+            arrange_time:arrange_time,
+            arrange_loc:arrange_loc,
+            uid:localStorage.uid          
+        },function(result){
+            result=JSON.parse(result);
+            if(result.ret==200){
+                alert("新建成功");
+                $("#events_title_input").val("");
+                $("#events_arrange_time_input").val("");
+                $("#events_arrange_loc_input").val("");
+                clickDate(cur_year,cur_month,cur_day);
+                shiftTabs(0);
+            }else if(result.ret==1003){
+                alert("请填写全参数");
+            }else{
+                alert("内部服务器错误");
+            }
+        });
+    }
+
+    function submitMemo(){
+        var time=$("#memo_time_input").val();
+        var title=$("#memo_title_input").val();
+        var contents=$("#memo_contents_input").val();
+        console.log(time);
+        console.log(title);
+        console.log(contents);
+        $.post("https://infini.1cf.co/calendar/NewMemo",{
+            time:time,
+            title:title,
+            contents:contents,
+            uid:localStorage.uid          
+        },function(result){
+            result=JSON.parse(result);
+            if(result.ret==200){
+                alert("新建成功");
+                $("#memo_time_input").val("");
+                $("#memo_title_input").val("");
+                $("#memo_contents_input").val("");
+                clickDate(cur_year,cur_month,cur_day);
+                shiftTabs(0);
+            }else if(result.ret==1003){
+                alert("请填写全参数");
+            }else{
+                alert("内部服务器错误");
+            }
+        });
+    }
+
+    function deleteSchedule(cid){
+        if(confirm("确定要删除吗？")){
+            $.post("https://infini.1cf.co/calendar/DeleteSchedules",{
+                cid:cid,
+                uid:localStorage.uid          
+            },function(result){
+                result=JSON.parse(result);
+                if(result.ret==200){
+                    alert("删除成功");
+                    clickDate(cur_year,cur_month,cur_day);
+                }else if(result.ret==1003){
+                    alert("请填写全参数");
+                }
+            }); 
+        }   
+    }
+
+    function logout() {
+        $(".cal-require-login").css("display", "flex");
+        localStorage.uid = 0;
+    }
+
+    function getCountDays(dayValue) {
+        var curDate = new Date(Date.parse(dayValue.replace(/-/g, '/')));
+        var curMonth = curDate.getMonth();
+        curDate.setMonth(curMonth + 1);
+        curDate.setDate(0);
+        return curDate.getDate();
+    }
+
+    function getWeekByDay(dayValue) {
+        var day = new Date(Date.parse(dayValue.replace(/-/g, '/')));
+        return day.getDay();
+    }
+
+    function real_date(year, month, day) {
+        if (real_cur_day == day && real_cur_month == month && real_cur_year == year) return "cal-current";
+        else return "";
+    }
+
+    function editEvents(cid){
+        if(localStorage.editing=="1"){
+            alert("请先关闭当前正在编辑的页面……");
+        }else{
+            localStorage.cid=cid;
+            localStorage.time=cur_year+"-"+cur_month+"-"+cur_day;
+            localStorage.title=$("#events_title_"+cid).html();
+            localStorage.arrange_time=$("#events_arrange_time_"+cid).html();
+            localStorage.arrange_loc=$("#events_arrange_loc_"+cid).html();
+            localStorage.editing=1;
+            ipcRenderer.send('events-window-open');
+        }
+    }
+    function editMemo(cid){
+        if(localStorage.editing=="1"){
+            alert("请先关闭当前正在编辑的页面……");
+        }else{
+            localStorage.cid=cid;
+            localStorage.editing=1;
+            localStorage.time=cur_year+"-"+cur_month+"-"+cur_day;
+            localStorage.title=$("#memo_title_"+cid).html();
+            localStorage.contents=$("#memo_contents_"+cid).html();
+            ipcRenderer.send('memo-window-open');
+        }
+    }
+
+</script>
+
+</html>

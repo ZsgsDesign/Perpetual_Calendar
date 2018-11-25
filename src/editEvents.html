@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>万年历</title>
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="../css/photon.css">
+    <link rel="stylesheet" href="../css/MDI.css">
+
+    <!-- Javascript -->
+    <style>
+        html,
+        body {
+            font-family: "Microsoft Yahei", "RobotoDraft", "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background: transparent;
+        }
+
+        .window {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: rgba(0, 0, 0, 0.1) 0px 0px 30px;
+            margin: 1rem;
+            border: 1px solid #c2c0c2;
+        }
+
+        .cal-header {
+            display: flex;
+            align-items: center;
+        }
+
+        dotgroup {
+            display: flex;
+            flex-grow: 0;
+            flex-shrink: 0;
+            padding-left: 0.75rem;
+            align-items: center;
+        }
+
+        dot {
+            display: inline-block;
+            width: 0.75rem;
+            height: 0.75rem;
+            border-radius: 200px;
+            margin-right: 0.25rem;
+            box-shadow: 0 0 30px rgba(0, 0, 0, .1);
+            transition: .2s ease-out .0s;
+            -webkit-app-region: no-drag;
+        }
+
+        th,
+        td {
+            padding: 0;
+        }
+
+        dot:hover {
+            filter: brightness(0.75);
+        }
+
+        .cal-header>h1 {
+            flex-grow: 1;
+            flex-shrink: 0;
+        }
+        *{
+            font-family: "华文中宋";
+        }
+        .cal-ordinary{
+            width:100%;
+            padding:1rem;
+        }
+
+    </style>
+</head>
+
+<body>
+    <div class="window">
+
+        <!-- .toolbar-header sits at the top of your app -->
+        <header class="toolbar toolbar-header cal-header" style="-webkit-app-region: drag">
+            <dotgroup>
+                <dot class="close" style="background:#fc605b;border: 1px solid #f62726;"></dot>
+                <dot class="max" style="background:#fdbc40;border: 1px solid #f1a304;"></dot>
+                <dot class="min" style="background:#34c84a;border: 1px solid #32af24;"></dot>
+            </dotgroup>
+            <h1 class="title">修改日程</h1>
+        </header>
+
+        <!-- Your app's content goes inside .window-content -->
+        <div class="window-content">
+
+                        <div class="cal-ordinary">
+                            <div class="form-group">
+                                <label>时间</label>
+                                <input type="text" id="events_time_input" class="form-control" placeholder="2018-10-23" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>日程标题</label>
+                                <input  id="events_title_input" type="text" class="form-control" placeholder="标题">
+                                </div>
+                            <div class="form-group">
+                                <label>日程地点</label>
+                                <input id="events_arrange_loc_input" type="text" class="form-control" placeholder="地点">
+                            </div>
+                            <div class="form-group">
+                                <label>提醒时间</label>
+                                <select id="events_arrange_time_input" class="form-control">
+                                    <option>0</option>
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                    <option>5</option>
+                                    <option>6</option>
+                                    <option>7</option>
+                                    <option>8</option>
+                                    <option>9</option>
+                                    <option>10</option>
+                                    <option>11</option>
+                                    <option>12</option>
+                                    <option>13</option>
+                                    <option>14</option>
+                                    <option>15</option>
+                                    <option>16</option>
+                                    <option>17</option>
+                                    <option>18</option>
+                                    <option>19</option>
+                                    <option>20</option>
+                                    <option>21</option>
+                                    <option>22</option>
+                                    <option>23</option>
+                                    <option>24</option>
+                                </select>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-form btn-default close" >取消</button>
+                                <button type="submit" class="btn btn-form btn-primary" onclick="submitEvents()">修改日程</button>
+                            </div>
+                        </div>
+
+        </div>
+    </div>
+</body>
+<script>window.$ = window.jQuery = require('./js/jquery-3.2.1.min.js');</script>
+<script type="text/javascript" src="./js/calendar-converter.js"></script>
+<script>
+    var ipcRenderer = require('electron').ipcRenderer;
+    var isBig = true;
+    var CConverter = new CalendarConverter;
+
+    ipcRenderer.on('init', (event, arg) => {
+        $("#events_time_input").val(localStorage.time);
+        $("#events_title_input").val(localStorage.title);
+        $("#events_arrange_loc_input").val(localStorage.arrange_loc);
+        $("#events_arrange_time_input").val(localStorage.arrange_time);
+    });
+
+    $(document).on("click", ".close", function () {
+        ipcRenderer.send('events-window-closed');
+    });
+    $(document).on("click", ".max", function () {
+        if (isBig) {
+            ipcRenderer.send('events-show-window');
+        } else {
+            ipcRenderer.send('events-orignal-window');
+        }
+        isBig = !isBig;
+    });
+    $(document).on("click", ".min", function () {
+        ipcRenderer.send('events-hide-window');
+    });
+
+    function submitEvents(){
+        var time=$("#events_time_input").val();
+        var title=$("#events_title_input").val();
+        var arrange_time=$("#events_arrange_time_input").val();
+        var arrange_loc=$("#events_arrange_loc_input").val();
+        console.log(time);
+        console.log(title);
+        console.log(arrange_time);
+        console.log(arrange_loc);
+        $.post("https://infini.1cf.co/calendar/ModifyEvents",{
+            cid:localStorage.cid,
+            time:time,
+            title:title,
+            arrange_time:arrange_time,
+            arrange_loc:arrange_loc,
+            uid:localStorage.uid          
+        },function(result){
+            result=JSON.parse(result);
+            if(result.ret==200){
+                alert("修改成功");
+                ipcRenderer.send('events-window-closed');
+            }else if(result.ret==1003){
+                alert("请填写全参数");
+            }else{
+                alert("内部服务器错误");
+            }
+        });
+    }
+
+</script>
+
+</html>
